@@ -1,12 +1,12 @@
 // Set up a collection to contain player information. On the server,
 // it is backed by a MongoDB collection named "players".
 
-Players = new Meteor.Collection("players");
+Trailers = new Meteor.Collection("trailers");
 
 if (Meteor.isClient) {
   Template.leaderboard.helpers({
-    players : function () {
-      return Players.find({}, {sort: {score: -1, name: 1}});
+    trailers : function () {
+      return Trailers.find({}, {sort: {progress: 1, name: 1}});
     },
 
     tableSettings : function () {
@@ -14,32 +14,34 @@ if (Meteor.isClient) {
           fields: [
             { key: 'name', label: 'Full Name' },
             { key: 'name', label: 'First Name', fn: function (name) { return name ? name.split(' ')[0] : ''; } },
-            { key: 'score', label: 'Score' }
+            { key: 'progress', label: 'Progress' } //Distance travelled since the beginning of the trail
+            { key: 'health', label: 'Health'} //Physical condition of the trailer
+            { key: 'position', label: 'Position'} //pos on the map
           ]
       };
     },
 
     selected_name : function () {
-      var player = Players.findOne(Session.get("selected_player"));
-      return player && player.name;
+      var trailer = Trailers.findOne(Session.get("selected_trailer"));
+      return trailer && trailer.name;
     }
   });
 
-  Template.player.helpers({
+  Template.trailer.helpers({
     selected : function () {
-      return Session.equals("selected_player", this._id) ? "selected" : '';
+      return Session.equals("selected_trailer", this._id) ? "selected" : '';
     }
   });
 
   Template.leaderboard.events({
     'click input.inc': function () {
-      Players.update(Session.get("selected_player"), {$inc: {score: 5}});
+      Trailers.update(Session.get("selected_trailer"), {$inc: {progress: 1}});
     }
   });
 
-  Template.player.events({
+  Template.trailer.events({
     'click': function () {
-      Session.set("selected_player", this._id);
+      Session.set("selected_trailer", this._id);
     }
   });
 }
@@ -47,7 +49,7 @@ if (Meteor.isClient) {
 // On server startup, create some players if the database is empty.
 if (Meteor.isServer) {
   Meteor.startup(function () {
-    if (Players.find().count() === 0) {
+    if (Trailers.find().count() === 0) {
       var names = ["Ada Lovelace",
                    "Grace Hopper",
                    "Marie Curie",
@@ -55,7 +57,7 @@ if (Meteor.isServer) {
                    "Nikola Tesla",
                    "Claude Shannon"];
       for (var i = 0; i < names.length; i++)
-        Players.insert({name: names[i], score: Math.floor(Random.fraction()*10)*5});
+        Trailers.insert({name: names[i], score: Math.floor(Random.fraction()*10)*5});
     }
   });
 }
